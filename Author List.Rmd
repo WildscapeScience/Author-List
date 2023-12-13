@@ -1,0 +1,67 @@
+---
+title: "Author List"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(googlesheets4)
+library(plume)
+library(tidyr)
+library(dplyr)
+```
+
+```{r wrangle data, include=FALSE, print=FALSE, message=FALSE}
+author_data <- read_sheet("https://docs.google.com/spreadsheets/d/1QTgiLrw6qoZCLupFu_VfsNm4fzOAaQc1th6ZmHHmeZ0/edit#gid=0", sheet = 2)
+
+author_data <- rename(author_data, family_name = Surname, email = Email, orcid = ORCiD)
+
+author_data$Country = "Canada"
+
+author_data <- author_data %>%
+  unite(col = given_name, `First name`, Initial, na.rm = TRUE, sep = " ") %>%
+  unite(col = affiliation_1, Institution_1, Department_1, na.rm = TRUE, sep = ", ") %>%
+  unite(col = affiliation_2, Institution_2, Department_2, na.rm = TRUE, sep = ", ") %>%
+  unite(col = location, City, `State/Province`, Country, na.rm = TRUE, sep = ", ")
+
+author_data <- mutate(author_data, affiliation_1 = ifelse(affiliation_1 == "", NA, paste(affiliation_1, location, sep = ", ")),
+                      affiliation_2 = ifelse(affiliation_2 == "", NA, paste(affiliation_2, location, sep = ", ")),
+                      conceptualization = ifelse(is.na(`Conceptualization:   Ideas; formulation or evolution of overarching research goals and aims`), NA, 1),
+                       data_curation = ifelse(is.na(`Data Curation:   Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later reuse`), NA, 1),
+                       analysis = ifelse(is.na(`Formal analysis:   Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data`), NA, 1),
+                       funding = ifelse(is.na(`Funding acquisition:   Acquisition of the financial support for the project leading to this publication`), NA, 1),
+                       investigation = ifelse(is.na(`Investigation:   Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection`), NA, 1),
+                       methodology = ifelse(is.na(`Investigation:   Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection`), NA, 1),
+                       administration = ifelse(is.na(`Project administration:   Management and coordination responsibility for the research activity planning and execution`), NA, 1),
+                       resources = ifelse(is.na(`Resources:   Provision of study materials, reagents, materials, patients, laboratory samples, animals, instrumentation, computing resources, or other analysis tools`), NA, 1),
+                       software = ifelse(is.na(`Software:   Programming, software development; designing computer programs; implementation of the computer code and supporting algorithms; testing of existing code components`), NA, 1),
+                       supervision = ifelse(is.na(`Supervision:   Oversight and leadership responsibility for the research activity planning and execution, including mentorship external to the core team`), NA, 1),
+                       validation = ifelse(is.na(`Validation:   Verification, whether as a part of the activity or separate, of the overall replication/ reproducibility of results/experiments and other research outputs`), NA, 1),
+                       visualization = ifelse(is.na(`Visualization:   Preparation, creation and/or presentation of the published work, specifically visualization/ data presentation`), NA, 1),
+                       writing = ifelse(is.na(`Writing - Original Draft:   Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation)`), NA, 1),
+                       editing = ifelse(is.na(`Writing - Review & Editing:   Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision – including pre-or postpublication stages`), NA, 1))
+
+author_data <- arrange(author_data, `Order for preprint`)
+author_data <- subset(author_data, select = c(given_name, family_name, email, orcid, affiliation_1, affiliation_2, conceptualization:editing))
+
+authors <- Plume$new(author_data)
+```
+
+## Authors
+
+```{r results = 'asis'}
+authors$get_author_list("^a^") |> cat(sep = ", ")
+```
+
+```{r results = 'asis'}
+authors$get_affiliations() |> cat(sep = "\n\n")
+```
+
+## Credit List
+
+Methodology note: this list was created assuming that any non-empty cell in the contribution columns is indicative of a contribution in that area.
+
+```{r results = 'asis'}
+paste0("**", authors$get_contributions(roles_first = FALSE, by_author = TRUE, literal_names = TRUE, divider = ":** ", sep_last = ", "), ".") |> cat(sep = " ")
+```
