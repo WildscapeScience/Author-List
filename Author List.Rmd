@@ -10,10 +10,13 @@ library(googlesheets4)
 library(plume)
 library(tidyr)
 library(dplyr)
+
+gs4_auth()
 ```
 
 ```{r wrangle data, include=FALSE, print=FALSE, message=FALSE}
-author_data <- read_sheet("https://docs.google.com/spreadsheets/d/1QTgiLrw6qoZCLupFu_VfsNm4fzOAaQc1th6ZmHHmeZ0/edit#gid=0", sheet = 2)
+
+author_data <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1QTgiLrw6qoZCLupFu_VfsNm4fzOAaQc1th6ZmHHmeZ0/edit#gid=0", sheet = 2) # If you see 'Selection', you need to run gs4_auth() and select 1 and 1. 
 
 author_data <- rename(author_data, family_name = Surname, email = Email, orcid = ORCiD)
 
