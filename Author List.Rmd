@@ -23,10 +23,11 @@ author_data <- author_data %>%
   unite(col = given_name, `First name`, Initial, na.rm = TRUE, sep = " ") %>%
   unite(col = affiliation_1, Institution_1, Department_1, na.rm = TRUE, sep = ", ") %>%
   unite(col = affiliation_2, Institution_2, Department_2, na.rm = TRUE, sep = ", ") %>%
-  unite(col = location, City, `State/Province`, Country, na.rm = TRUE, sep = ", ")
+  unite(col = location_1, City_1, `State/Province_1`, Country, na.rm = TRUE, remove = FALSE, sep = ", ") %>%
+  unite(col = location_2, City_2, `State/Province_2`, Country, na.rm = TRUE, remove = FALSE, sep = ", ")
 
-author_data <- mutate(author_data, affiliation_1 = ifelse(affiliation_1 == "", NA, paste(affiliation_1, location, sep = ", ")),
-                      affiliation_2 = ifelse(affiliation_2 == "", NA, paste(affiliation_2, location, sep = ", ")),
+author_data <- mutate(author_data, affiliation_1 = ifelse(affiliation_1 == "", NA, paste(affiliation_1, location_1, sep = ", ")),
+                      affiliation_2 = ifelse(affiliation_2 == "", NA, paste(affiliation_2, location_2, sep = ", ")),
                       conceptualization = ifelse(is.na(`Conceptualization:   Ideas; formulation or evolution of overarching research goals and aims`), NA, 1),
                        data_curation = ifelse(is.na(`Data Curation:   Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later reuse`), NA, 1),
                        analysis = ifelse(is.na(`Formal analysis:   Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data`), NA, 1),
