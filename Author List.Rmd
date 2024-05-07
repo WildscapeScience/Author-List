@@ -1,6 +1,8 @@
 ---
 title: "Author List"
 output: word_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -10,6 +12,9 @@ library(googlesheets4)
 library(plume)
 library(tidyr)
 library(dplyr)
+library(tidyverse)
+library(openxlsx)
+library(here)
 
 ```
 
@@ -65,6 +70,42 @@ authors$get_affiliations() |> cat(sep = "\n\n")
 
 Methodology note: this list was created assuming that any non-empty cell in the contribution columns is indicative of a contribution in that area.
 
+Use this to organize credit list by author and to include the authors' full first and last names.
+
 ```{r results = 'asis'}
 paste0("**", authors$get_contributions(roles_first = FALSE, by_author = TRUE, literal_names = TRUE, divider = ":** ", sep_last = ", "), ".") |> cat(sep = " ")
 ```
+
+
+Use the code below to organize credit list by contribution and to include the first letters of the authors' first and last names only.
+
+```{r Generate Initials include=FALSE, print=FALSE, message=FALSE}
+
+#Run this code chunk ot generate a column of initials for checking the output. This chunk is not necessary for producing the credit list.
+
+#extract capital letters from first names and last names
+author_data$first_name_initials<- str_extract_all(author_data$given_name, "[A-Z]+", simplify = TRUE)
+author_data$second_name_intials<- str_extract_all(author_data$family_name, "[A-Z]+", simplify = TRUE)
+
+#combine into an Initial column
+first<-as.data.frame(author_data$first_name_initials)
+second<-as.data.frame(author_data$second_name_intials)
+initial<-cbind(first, second)
+
+initial$allInitials<-paste0(first$V1, first$V2, first$V3, second$V1, second$V2)
+author_data$allInitials<-cbind(initial$allInitials)
+
+author_data<-author_data %>% 
+  select(-c(starts_with("first"))) %>% 
+  select(-c(starts_with("second")))
+
+```
+
+
+```{r results = 'asis'}
+paste0("**", authors$get_contributions(roles_first = TRUE, by_author = FALSE, literal_names = FALSE, divider = ":** ", sep_last = ", ", dotted_initials = FALSE), ".") |> cat(sep = " ")
+```
+
+
+
+
